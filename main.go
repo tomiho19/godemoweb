@@ -26,8 +26,11 @@ func main()  {
 		port = "8080"
 	}
 
-	mux := http.NewServeMux()
+	fs := http.FileServer(http.Dir("assets"))
 
+	mux := http.NewServeMux()
+	mux.Handle("/assets/", http.StripPrefix("/assets/", fs))
 	mux.HandleFunc("/", indexHandler)
+
 	http.ListenAndServe(":" + port, mux)
 }
