@@ -21,10 +21,10 @@ import (
 )
 
 type Search struct {
-	Query string
-	NextPage int
+	Query      string
+	NextPage   int
 	TotalPages int
-	Results *news.Results
+	Results    *news.Results
 }
 
 var tpl = template.Must(template.ParseFiles("index.html"))
@@ -69,10 +69,14 @@ func searchHandler(newsapi *news.Client) http.HandlerFunc {
 		}
 
 		search := &Search{
-			Query: searchQuery,
-			NextPage: nextPage,
+			Query:      searchQuery,
+			NextPage:   nextPage,
 			TotalPages: int(math.Ceil(float64(results.TotalResults))),
-			Results: results,
+			Results:    results,
+		}
+
+		if ok := !search.IsLastPage(); ok {
+			search.NextPage++
 		}
 
 		buf := &bytes.Buffer{}
@@ -86,7 +90,11 @@ func searchHandler(newsapi *news.Client) http.HandlerFunc {
 	}
 }
 
-func main()  {
+func (s *Search) IsLastPage() bool {
+	return s.NextPage >= s.TotalPages
+}
+
+func main() {
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("Error loading .env file")
@@ -113,5 +121,5 @@ func main()  {
 	mux.HandleFunc("/search", searchHandler(newsapi))
 	mux.HandleFunc("/", indexHandler)
 
-	http.ListenAndServe(":" + port, mux)
+	http.ListenAndServe(":"+port, mux)
 }
